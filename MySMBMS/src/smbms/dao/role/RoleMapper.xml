@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="smbms.dao.role.RoleMapper">
+	<update id="updateRoleByid" parameterType="role">
+		UPDATE `smbms_role`
+		<set>
+			<if test="roleCode !=null">`roleCode` = #{roleCode},</if>
+		<if test="roleName !=null">`roleName` = #{roleName},</if>
+		<if test="modifyBy !=null and modifyBy !=0">`modifyBy` = #{modifyBy},</if>
+		<if test="modifyDate !=null">`modifyDate` = #{modifyDate}</if>
+		</set>
+		WHERE `id` = #{id}
+	</update>
+	
+	
+</mapper>

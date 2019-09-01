@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="smbms.dao.bill.BillMapper">
+	<select id="getBillList" resultMap="billList" parameterType="Bill">
+	SELECT b.*,p.proName FROM smbms_bill AS b
+	INNER JOIN smbms_provider AS p ON(b.providerId= p.id)
+	WHERE b.productName LIKE CONCAT('%',#{productName},'%')
+	AND b.providerId = #{providerId}
+	AND b.isPayment = #{isPayment};
+	</select>
+	<select id="getBillByIdAndName" resultMap="billListByass">
+		SELECT `smbms_bill`.*,`smbms_provider`.* FROM
+		`smbms_bill` INNER JOIN `smbms_provider`
+		ON(`smbms_bill`.`providerId` = `smbms_provider`.`id`)
+		where 1 = 1
+		<if test="name!=null and name!=''">
+			and `smbms_bill`.`productName` LIKE CONCAT('%',#{name},'%')
+		</if>
+		<if test="proId!=null">
+			or `smbms_bill`.`providerId` = #{proId}
+		</if>
+		<if test="isP!=null">
+			or `smbms_bill`.`isPayment` = #{isP};
+		</if>
+		
+	</select>
+	
+	<resultMap type="Bill" id="billListByass">
+		<id property="id" column="id"/>
+		<result property="billCode" column="billCode"/>
+		<result property="productName" column="productName"/>
+		<result property="totalPrice" column="totalPrice"/>
+		<result property="isPayment" column="isPayment"/>
+		<association property="provider" javaType="Provider" resultMap="ProviderResult"></association>
+	</resultMap>
+	<resultMap type="Provider" id="ProviderResult">
+		<id property="id" column="id"/>
+		<result property="proCode" column="proCode"/>
+		<result property="proName" column="proName"/>
+		<result property="proContact" column="proContact"/>
+		<result property="proPhone" column="proPhone"/>
+	</resultMap>
+	<resultMap type="Bill" id="billList">
+		<result property="id" column="id"/>
+		<result property="billCode" column="billCode"/>
+		<result property="productName" column="productName"/>
+		<result property="providerName" column="proName"/>
+		<result property="totalPrice" column="totalPrice"/>
+		<result property="isPayment" column="isPayment"/>
+		<result property="creationDate" column="creationDate"/>
+	</resultMap>
+	<select id="getBillByProviderIds_foreach" resultMap="billList">
+		SELECT b.*,p.proName FROM smbms_bill AS b
+		INNER JOIN smbms_provider AS p ON(b.providerId= p.id)
+		and b.providerId in
+		<foreach collection="array" item="ps" open="(" separator="," close=")">
+			#{ps}
+		</foreach>
+	</select>
+</mapper>

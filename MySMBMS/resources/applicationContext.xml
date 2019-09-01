@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="http://www.springframework.org/schema/beans" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:p="http://www.springframework.org/schema/p" xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+	http://www.springframework.org/schema/beans/spring-beans-3.2.xsd 
+	http://www.springframework.org/schema/context 
+	http://www.springframework.org/schema/context/spring-context-3.2.xsd 
+	http://www.springframework.org/schema/aop 
+	http://www.springframework.org/schema/aop/spring-aop-3.2.xsd 
+	http://www.springframework.org/schema/tx
+	http://www.springframework.org/schema/tx/spring-tx-3.2.xsd">
+	<context:component-scan base-package="smbms.service"></context:component-scan>
+	<aop:aspectj-autoproxy />
+	<!-- 配置数据源 -->
+	<!-- <bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource"
+		destroy-method="close">
+		<property name="driverClassName" value="com.mysql.jdbc.Driver" />
+		<property name="url"
+			value="jdbc:mysql://localhost:3306/smbms?useUnicode=true&amp;characterEncoding=utf-8" />
+		<property name="username" value="root" />
+		<property name="password" value="root" />
+	</bean> -->
+	
+	<!-- 使用属性配置数据源 -->
+	<!-- 引入properties文件 -->
+	<bean class="org.springframework.beans.factory.config.PreferencesPlaceholderConfigurer">
+		<property name="location">
+			<value>classpath:database.properties</value>
+		</property>
+	</bean>
+	<!-- 配置DataSource -->
+	<bean id="dataSource" destroy-method="close"
+	class="org.apache.commons.dbcp.BasicDataSource">
+		<property name="driverClassName" value="${driver}"/>
+		<property name="url" value="${url}"/>
+		<property name="username" value="${userName}"/>
+		<property name="password" value="${password}"/>
+	</bean>
+	
+	<!-- 配置SqlSessionFactoryBean -->
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<!-- 引用数据源组件 -->
+		<property name="dataSource" ref="dataSource" />
+		<!-- 引用Mybatis配置文件的配置 -->
+		<property name="configLocation" value="classpath:mybatis-config.xml" />
+
+		<!-- 配置SQL配置文件 -->
+		<!-- <property name="mapperLocations"> <list> <value>classpath:smbms/dao/**/*.xml</value> 
+			</list> </property> -->
+	</bean>
+	<!-- 配置DAO -->
+	<!-- 如果映射文件与映射器的类路径想同可以不必指定SQL的映射文件 -->
+	<!-- 反之需要指定映射文件位置 -->
+	<!-- 配置jar包的mapper组件 -->
+	<!-- <bean id="userMapper" class="org.mybatis.spring.mapper.MapperFactoryBean"> 
+		指定mapper的映射器（只能是接口） <property name="mapperInterface" value="smbms.dao.user.UserMapper" 
+		/> 需要指定sqlSession来创建mapper的实例 <property name="sqlSessionFactory" ref="sqlSessionFactory" 
+		/> </bean> -->
+	<!-- 使用扫描器方式配置 -->
+	<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+		<!-- 指定包的路径，扫描器迭代扫描 -->
+		<property name="basePackage" value="smbms.dao.*" />
+	</bean>
+	<!-- 配置SqlSessionTemplate -->
+	<bean id="sqlSessionTemplate" class="org.mybatis.spring.SqlSessionTemplate">
+		<constructor-arg name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+
+
+	<!-- 配置DAO组件并注入SqlSessionTemplate实例 -->
+	<!-- <bean id="userMapper" class="smbms.dao.user.UserMapper"> <property 
+		name="sqlSession" ref="sqlSessionTemplate" /> </bean> -->
+	<!-- 配置业务Bean并注入Dao实例 -->
+<!-- 	<bean id="userService" class="smbms.service.user.UserServiceImpl">
+		<property name="userMapper" ref="userMapper" />
+	</bean> -->
+
+	<!-- 定义事务管理器 -->
+	<bean id="txManager"
+		class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+	<tx:annotation-driven transaction-manager="txManager"/>
+	<!-- 通过<tx:advice> 标签为指定的事务管理器设置事务属性 -->
+	<tx:advice id="txAdvice" transaction-manager="txManager">
+	<!-- 定义属性，声明事务规则 （对不同的方法设置不同的事务属性）-->
+		<!-- <tx:attributes>
+			<tx:method name="find*" propagation="SUPPORTS" />
+			<tx:method name="add*" propagation="REQUIRED" />
+			<tx:method name="del*" propagation="REQUIRED" />
+			<tx:method name="update*" propagation="REQUIRED" />
+			<tx:method name="*" propagation="REQUIRED" />
+		</tx:attributes> -->
+	</tx:advice>
+	
+	<!-- 定义切面 -->
+	<aop:config>
+		<!-- 定义切入点 -->
+		<aop:pointcut id="serviceMethod" expression="execution(* smbms.service..*.*(..))"/>
+		<!-- 将事务增强与切入点组合 -->
+		<aop:advisor advice-ref="txAdvice" pointcut-ref="serviceMethod" />
+	</aop:config>
+</beans>

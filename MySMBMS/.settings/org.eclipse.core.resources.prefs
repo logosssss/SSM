@@ -1,0 +1,8 @@
+eclipse.preferences.version=1
+encoding//resources/database.properties=GBK
+encoding//resources/log4j.properties=GBK
+encoding//src/smbms/entity/Address.java=UTF-8
+encoding//src/smbms/entity/Bill.java=UTF-8
+encoding//src/smbms/entity/Provider.java=UTF-8
+encoding//src/smbms/entity/Role.java=UTF-8
+encoding//src/smbms/entity/User.java=UTF-8

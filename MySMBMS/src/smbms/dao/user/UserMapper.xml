@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="smbms.dao.user.UserMapper">
+	<select id="getUserList" resultMap="userList">
+		SELECT `smbms_user`.*,`smbms_role`.`roleName` FROM `smbms_user`
+		INNER JOIN `smbms_role` ON(`smbms_role`.`id` = `smbms_user`.`userRole`)
+		<trim prefix="where" prefixOverrides="and | or">
+			<if test="uName != null and uName !=''">
+				and `smbms_user`.`userName` LIKE CONCAT('%',#{uName},'%')
+			</if>
+			<if test="uRole !=null">
+				AND `smbms_role`.`id` = #{uRole}
+			</if>
+		</trim>
+		ORDER BY `smbms_user`.`creationDate` DESC LIMIT #{from},#{pageSize}
+<!-- 	<where>
+		<if test="uName != null and uName !=''">
+			and `smbms_user`.`userName` LIKE CONCAT('%',#{uName},'%')
+		</if>
+		<if test="uRole !=null">
+			AND `smbms_role`.`id` = #{uRole};
+		</if>
+	</where> -->
+<!-- 	WHERE 1=1
+	<if test="uName != null and uName !=''">
+		and `smbms_user`.`userName` LIKE CONCAT('%',#{uName},'%')
+	</if>
+	<if test="uRole !=null">
+		AND `smbms_role`.`id` = #{uRole};
+	</if> -->
+	
+	</select>
+	<select id="getUserListByRoleId" parameterType="Integer" resultMap="userRoleResult">
+		SELECT `smbms_user`.*,`smbms_role`.*
+		FROM `smbms_user` INNER JOIN `smbms_role`
+		ON(`smbms_role`.`id` = `smbms_user`.`userRole`)
+		WHERE `smbms_role`.`id` = #{userRole};
+	</select>
+	<select id="getAddressListByUserId" parameterType="Integer" resultMap="userAddressResult">
+		SELECT u.`id`,u.`userCode`,u.`userName`,a.*
+		FROM `smbms_user` AS u INNER JOIN `smbms_address` AS a
+		ON a.`userId` = u.`id` WHERE u.`id` = #{id};
+	</select>
+	<resultMap type="User" id="userAddressResult">
+		<id property="id" column="id"/>
+		<result property="userCode" column="userCode"/>
+		<result property="userName" column="userName"/>
+		<collection property="addressList" ofType="Address" resultMap="addressResult"/>
+	</resultMap>
+	<resultMap type="Address" id="addressResult">
+		<id property="r_id" column="id"/>
+		<result property="postCode" column="postCode"/>
+		<result property="tel" column="tel"/>
+		<result property="contact" column="contact"/>
+		<result property="addressDesc" column="addressDesc"/>
+	</resultMap>
+	<resultMap type="User" id="userRoleResult">
+		<id property="id" column="id"/>
+		<result property="userCode" column="userCode"/>
+		<result property="userName" column="userName"/>
+		<result property="userRole" column="userRole"/>
+		<association property="role" javaType="Role" resultMap="roleResult"/>			
+	</resultMap>
+	<resultMap type="Role" id="roleResult">
+		<result property="roleCode" column="roleCode"/>
+		<result property="roleName" column="roleName"/>
+	</resultMap>
+	<insert id="addUser" parameterType="User">
+		INSERT INTO `smbms_user`(`userCode`,`userName`,`userPassword`,
+		`gender`,`birthday`,`phone`,`address`,`userRole`,`createdBy`,
+		`creationDate`,`modifyBy`,`modifyDate`) VALUES
+		(#{userCode},#{userName},#{userPassword},#{gender},#{birthday},#{phone}
+		,#{address},#{userRole},#{createdBy},#{creationDate}
+		,#{modifyBy},#{modifyDate});
+	</insert>
+	
+	<update id="modifyUser" parameterType="User">
+		UPDATE `smbms_user`
+		<set>
+			<if test="userCode != null">`userCode` = #{userCode},</if>
+			<if test="userName != null">`userName` = #{userName},</if>
+			<if test="userPassword != null">`userPassword` = #{userPassword},</if>
+			<if test="gender != null and gender != 0">`gender` = #{gender},</if>
+			<if test="birthday != null">`birthday` = #{birthday},</if>
+			<if test="phone != null">`phone` = #{phone},</if>
+			<if test="address != null">`address` = #{address},</if>
+			<if test="userRole != null and userRole != 0">`userRole` = #{userRole},</if>
+			<if test="modifyDate != null">`modifyDate` = #{modifyDate},</if>
+			<if test="modifyBy != null">`modifyBy` = #{modifyBy}</if>
+		</set>
+		WHERE `id` = #{id};
+	</update>
+	
+	<update id="updatePassWord">
+		UPDATE `smbms_user` set `userPassword` = #{userPassWord}
+		where `id` = #{id};
+	</update>
+	
+	<select id="getUserListByUser" parameterType="User" resultMap="userList">
+		SELECT `smbms_user`.*,`smbms_role`.*
+		FROM `smbms_user` INNER JOIN `smbms_role`
+		ON(`smbms_role`.`id` = `smbms_user`.`userRole`)
+		WHERE `smbms_role`.`id` = #{userRole};
+	</select>
+	<resultMap type="User" id="userList">
+		<result property="id" column="id"/>
+		<result property="userCode" column="userCode"/>
+		<result property="userName" column="userName"/>
+		<result property="phone" column="phone"/>
+		<result property="userPassword" column="userPassword"/>
+		<result property="gender" column="gender"/>
+		<result property="birthday" column="birthday"/>
+		<result property="address" column="address"/>
+		<result property="userRole" column="userRole"/>
+		<result property="createdBy" column="createdBy"/>
+		<result property="creationDate" column="creationDate"/>
+		<result property="modifyBy" column="modifyBy"/>
+		<result property="modifyDate" column="modifyDate"/>
+		<result property="userRoleName" column="roleName"/>
+	</resultMap>
+	
+<!-- 	<select id="getUserListByRoleId_foreach_array" resultMap="userRoleResult">
+		SELECT `smbms_user`.*,`smbms_role`.*
+		FROM `smbms_user` INNER JOIN `smbms_role`
+		ON(`smbms_role`.`id` = `smbms_user`.`userRole`)
+		WHERE `smbms_role`.`id` in
+		<foreach collection="array" item="roleIds" open="(" separator="," close=")">
+			#{roleIds}
+		</foreach>
+	</select> -->
+	<select id="getUserListByRoleId_foreach_array" resultMap="userRoleResult">
+		SELECT `smbms_user`.*,`smbms_role`.*
+		FROM `smbms_user` INNER JOIN `smbms_role`
+		ON(`smbms_role`.`id` = `smbms_user`.`userRole`)
+		WHERE `smbms_role`.`id` in
+		<foreach collection="list" item="roleIds" open="(" separator="," close=")">
+			#{roleIds}
+		</foreach>
+	</select>
+	
+	<select id="getUserByGenderandRolesMap" resultMap="userRoleResult">
+		SELECT `smbms_user`.*,`smbms_role`.*
+		FROM `smbms_user` INNER JOIN `smbms_role`
+		ON(`smbms_role`.`id` = `smbms_user`.`userRole`)
+		WHERE `smbms_user`.`gender` = #{gender} and `smbms_role`.`id` in
+		<foreach collection="rodes" item="conditionMap" open="(" separator="," close=")">
+			#{conditionMap}
+		</foreach>
+	</select>
+	<select id="getUserList_choose" resultMap="userRoleResult">
+		SELECT `smbms_user`.*,`smbms_role`.*
+		FROM `smbms_user` INNER JOIN `smbms_role`
+		ON(`smbms_role`.`id` = `smbms_user`.`userRole`)
+		where 1 = 1
+		<choose>
+			<when test="userName !=null and userName !=''">
+				and `smbms_user`.`userName` like CONCAT('%',#{userName},'%')
+			</when>
+			<when test="userCode !=null and userCode !=''">
+				and `smbms_user`.`userCode`  like CONCAT('%',#{userCode},'%')
+			</when>
+			<when test="userRole !=null">
+				and `smbms_user`.`userRole`= #{userRole}
+			</when>
+			<otherwise>
+				and YEAR(`smbms_user`.`creationDate`) = YEAR(#{creationDate})
+			</otherwise>
+		</choose>
+	</select>
+	<select id="getUserByRoleIds_foreach_map" resultMap="userList">
+		SELECT `smbms_user`.*,`smbms_role`.`roleName` FROM `smbms_user`
+		INNER JOIN `smbms_role` ON(`smbms_role`.`id` = `smbms_user`.`userRole`)
+		where `smbms_user` in
+		<foreach collection="roles" item="rs" open="(" separator="," close=")">
+			#{rs}
+		</foreach>
+	</select>
+</mapper>

@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="smbms.dao.provider.ProviderMapper">
+	<cache
+		eviction="FIFO"
+		flushInterval="60000"
+		size="512"
+		readOnly="true"
+		/>
+	<insert id="addProvider" parameterType="Provider">
+		INSERT INTO `smbms_provider`(`proCode`,`proName`
+		,`proDesc`,`proContact`,`proPhone`,`proAddress`,
+		`proFax`,`createdBy`,`creationDate`)
+		VALUES(#{proCode},#{proName},
+		#{proDesc},#{proContact},#{proPhone},
+		#{proAddress},#{proFax},#{createdBy}
+		,#{creationDate});
+	</insert>
+	
+	<update id="updateProvider" parameterType="Provider">
+		UPDATE `smbms_provider`
+		<trim prefix="set" suffixOverrides="," suffix="WHERE id = #{id};">
+			<if test="proCode!=null">`proCode` = #{proCode},</if>
+			<if test="proName!=null">`proName` = #{proName},</if>
+			<if test="proDesc!=null">`proDesc` = #{proDesc},</if>
+			<if test="proContact!=null">`proContact`=#{proContact},</if>
+			<if test="proPhone!=null">``proPhone` = #{proPhone},</if>
+			<if test="proAddress!=null">`proAddress` = #{proAddress},</if>
+			<if test="proFax!=null">`proFax` = #{proFax},</if>
+			<if test="modifyDate!=null">`modifyDate` = #{modifyDate},</if>
+			<if test="modifyBy!=null and modifyBy !=0">`modifyBy` = #{modifyBy},</if>
+		</trim>
+	</update>
+	
+	<delete id="deleteProviider" parameterType="Integer">
+		DELETE FROM `smbms_provider` WHERE `id` = #{providerId};
+	</delete>
+	
+	<select id="getAllBillByProviderid" resultMap="providerResult">
+		SELECT `smbms_bill`.`id` AS b_id,`smbms_bill`.`billCode`,
+		`smbms_bill`.`isPayment`,`smbms_bill`.`productName`,`smbms_bill`.`productCount`
+		,`smbms_bill`.`providerId`,`smbms_bill`.`totalPrice`,`smbms_provider`.*
+		FROM `smbms_bill` INNER JOIN `smbms_provider`
+		ON(`smbms_bill`.`providerId` = `smbms_provider`.`id`)
+		<where>
+			<if test="id!=null">
+				`smbms_provider`.`id` = #{id};
+			</if>
+			<if test="name!=null and name !=''">
+				and `smbms_provider`.`proName` CONCAT('%',#{name},'%')
+			</if>
+		</where>
+		ORDER BY smbms_provider.`creationDate`
+		LIMIT #{from},#{pageSise} 
+	</select>
+	<select id="findProviderAll" resultType="provider">
+		SELECT * FROM `smbms_provider`
+	</select>
+	<resultMap type="Provider" id="providerResult">
+		<id property="id" column="id"/>
+		<result property="proCode" column="proCode"/>
+		<result property="proName" column="proName"/>
+		<result property="proContact" column="proContact"/>
+		<result property="proPhone" column="proPhone"/>
+		<collection property="billList" ofType="Bill" resultMap="billResult"/>
+	</resultMap>
+	<resultMap type="Bill" id="billResult">
+		<id property="id" column="b_id"/>
+		<result property="billCode" column="billCode"/>
+		<result property="productName" column="productName"/>
+		<result property="productCount" column="productCount"/>
+		<result property="totalPrice" column="totalPrice"/>
+		<result property="isPayment" column="isPayment"/> 
+	</resultMap>
+	
+	<select id="findProviderAllByName" parameterType="string" resultType="provider">
+		SELECT * FROM `smbms_provider` 
+		<if test="name != null and name != '' ">
+			where proName like concat('%',#{name},'%')
+		</if>
+	</select>
+</mapper>
